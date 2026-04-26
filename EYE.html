@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snellen Eye Test</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:wght@400;700&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f8f7f2;
+    --fg: #111111;
+    --accent: #1a1a2e;
+    --accent2: #e63946;
+    --muted: #888;
+    --card: #ffffff;
+    --border: #e0ded8;
+    --success: #2d6a4f;
+    --warning: #e9c46a;
+    --radius: 4px;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-serif: 'Libre Baskerville', serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  #app { width: 100%; max-width: 860px; }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ─── HEADER ─── */
+  .logo {
+    font-family: var(--font-serif);
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .headline {
+    font-family: var(--font-serif);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.15;
+    color: var(--fg);
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 10px;
+    text-align: center;
+    max-width: 520px;
+    line-height: 1.6;
+  }
+
+  /* ─── CARDS ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 100%;
+    margin-top: 28px;
+  }
+
+  .card-title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── BUTTONS ─── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    letter-spacing: 0.02em;
+  }
+  .btn-primary {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .btn-primary:hover { background: #333; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--fg); }
+  .btn-danger {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #c62828; }
+  .btn-sm { padding: 8px 16px; font-size: 13px; }
+  .btn-lg { padding: 16px 40px; font-size: 16px; }
+
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* ─── DISCLAIMER ─── */
+  .disclaimer {
+    background: #fff8e7;
+    border: 1px solid #f0d070;
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 12px;
+    color: #7a5c00;
+    line-height: 1.6;
+    margin-top: 24px;
+    width: 100%;
+  }
+  .disclaimer strong { font-weight: 600; }
+
+  /* ─── CALIBRATION ─── */
+  #calibrationBox {
+    background: var(--fg);
+    height: 54px;
+    border-radius: 3px;
+    margin: 20px 0;
+    position: relative;
+    transition: width 0.1s;
+    cursor: ew-resize;
+  }
+  .cc-label {
+    position: absolute;
+    right: -90px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .calibration-wrapper {
+    padding: 10px 0 10px 0;
+    position: relative;
+    overflow: visible;
+    margin-bottom: 8px;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .slider-row label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 2px;
+    background: var(--border);
+    outline: none;
+    border-radius: 2px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: var(--fg);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .slider-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    width: 60px;
+    text-align: right;
+  }
+
+  /* ─── DISTANCE ─── */
+  .distance-options {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .dist-card {
+    flex: 1;
+    min-width: 140px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .dist-card.selected {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .dist-card .dist-val {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+  }
+  .dist-card .dist-label { font-size: 12px; margin-top: 4px; opacity: 0.7; }
+
+  .custom-dist {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .custom-dist input {
+    width: 90px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--fg);
+  }
+  .custom-dist label { font-size: 13px; color: var(--muted); }
+
+  /* ─── EYE SELECTION ─── */
+  .eye-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .eye-btn {
+    flex: 1;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    background: var(--card);
+  }
+  .eye-btn.selected {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .eye-btn .eye-icon { font-size: 28px; }
+  .eye-btn .eye-label { font-size: 13px; margin-top: 6px; }
+
+  /* ─── TEST SCREEN ─── */
+  #testScreen {
+    min-height: 90vh;
+    justify-content: center;
+    background: #ffffff;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .test-meta {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: #aaa;
+    z-index: 101;
+  }
+  .test-meta .row-indicator {
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  #letterDisplay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.25em;
+    flex-wrap: nowrap;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+    letter-spacing: 0.15em;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .test-input-area {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: #f8f7f2;
+    border-top: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    z-index: 102;
+  }
+
+  .typed-answer {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    letter-spacing: 0.3em;
+    min-height: 40px;
+    color: var(--fg);
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--fg);
+    padding-bottom: 4px;
+    min-width: 200px;
+    text-align: center;
+  }
+
+  .input-hint { font-size: 12px; color: var(--muted); }
+
+  .letter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 500px;
+  }
+  .letter-btn {
+    width: 44px; height: 44px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+    color: var(--fg);
+  }
+  .letter-btn:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .letter-btn.backspace { font-size: 14px; width: 60px; }
+
+  .submit-row { display: flex; gap: 10px; }
+
+  /* ─── FEEDBACK FLASH ─── */
+  .feedback-flash {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-serif);
+    font-size: 80px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 200;
+    transition: opacity 0.2s;
+  }
+  .feedback-flash.correct { color: rgba(45, 106, 79, 0.15); }
+  .feedback-flash.wrong { color: rgba(230, 57, 70, 0.12); }
+  .feedback-flash.show { opacity: 1; }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-bar-wrap {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--border);
+    z-index: 110;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--fg);
+    transition: width 0.4s ease;
+  }
+
+  /* ─── RESULTS ─── */
+  .acuity-display {
+    font-family: var(--font-serif);
+    font-size: clamp(48px, 10vw, 90px);
+    font-weight: 700;
+    text-align: center;
+    color: var(--fg);
+    line-height: 1;
+    margin: 16px 0;
+  }
+  .acuity-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+  .result-grade {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-top: 10px;
+  }
+  .grade-excellent { background: #d8f3dc; color: #1b4332; }
+  .grade-good { background: #e9f5db; color: #2d6a4f; }
+  .grade-fair { background: #fff8e7; color: #7a5c00; }
+  .grade-poor { background: #ffe5e5; color: #7a0000; }
+
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 16px;
+  }
+  .result-table th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 0;
+  }
+  .result-table td {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--fg);
+  }
+  .result-table tr.best-row td { font-weight: 600; color: var(--success); }
+
+  .history-section { margin-top: 28px; }
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .history-item .h-acuity { font-family: var(--font-serif); font-weight: 700; font-size: 18px; }
+  .history-item .h-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ─── STATUS PILL ─── */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .pill-success { background: #d8f3dc; color: #1b4332; }
+  .pill-warning { background: #fff3cd; color: #7a5c00; }
+  .pill-danger { background: #ffe5e5; color: #7a0000; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot-success { background: #2d6a4f; }
+  .dot-warning { background: #e9c46a; }
+  .dot-danger { background: #e63946; }
+
+  /* ─── STEP INDICATOR ─── */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 32px;
+  }
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .step.active { color: var(--fg); }
+  .step-num {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .step.active .step-num {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+  .step.done .step-num {
+    background: var(--success);
+    color: #fff;
+    border-color: var(--success);
+  }
+  .step-divider {
+    width: 32px;
+    height: 1px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+
+  /* instructions list */
+  .instr-list { list-style: none; margin-top: 12px; }
+  .instr-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .instr-list li:last-child { border: none; }
+  .instr-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+    min-width: 20px;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 600px) {
+    .card { padding: 20px; }
+    .eye-btns { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ WELCOME SCREEN ═══ -->
+  <div id="welcomeScreen" class="screen active">
+    <div class="logo">Visual Acuity Assessment</div>
+    <h1 class="headline">Snellen Eye Test</h1>
+    <p class="subtitle">A calibrated, browser-based vision screening tool using standard Snellen methodology. Requires screen calibration for accurate results.</p>
+
+    <div class="steps" style="margin-top:32px;">
+      <div class="step active" id="step1"><div class="step-num">1</div><span>Calibrate</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step2"><div class="step-num">2</div><span>Distance</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step3"><div class="step-num">3</div><span>Test</span></div>
+      <div class="step-divider"></div>
+      <div class="step" id="step4"><div class="step-num">4</div><span>Results</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Before you begin</div>
+      <ul class="instr-list">
+        <li><span class="instr-num">01</span><span>Use a laptop or desktop monitor. Results on phones may be inaccurate.</span></li>
+        <li><span class="instr-num">02</span><span>Have a credit card or standard bank card nearby for calibration.</span></li>
+        <li><span class="instr-num">03</span><span>Sit upright with the screen at eye level.</span></li>
+        <li><span class="instr-num">04</span><span>Test each eye separately — cover one eye with your hand (not a patch) without pressing.</span></li>
+        <li><span class="instr-num">05</span><span>Ensure the room is well-lit with no glare on the screen.</span></li>
+      </ul>
+    </div>
+
+    <div class="disclaimer">
+      <strong>⚠ Medical Disclaimer:</strong> This tool is a screening aid only and is <strong>not a substitute for a professional eye examination</strong>. For accurate diagnosis, please consult a licensed optometrist or ophthalmologist. Accuracy depends on proper screen calibration and correct viewing distance.
+    </div>
+
+    <div class="btn-row" style="justify-content:center; margin-top:28px;">
+      <button class="btn btn-primary btn-lg" onclick="goTo('calibrationScreen')">Begin Calibration →</button>
+    </div>
+  </div>
+
+  <!-- ═══ CALIBRATION SCREEN ═══ -->
+  <div id="calibrationScreen" class="screen">
+    <div class="logo">Step 1 of 3</div>
+    <h1 class="headline">Screen Calibration</h1>
+    <p class="subtitle">Drag the slider until the black rectangle matches the width of your credit card exactly.</p>
+
+    <div class="card">
+      <div class="card-title">Credit Card Width Reference</div>
+      <p style="font-size:13px; color:var(--muted); margin-bottom:20px;">Standard card width: <strong style="color:var(--fg)">85.6 mm</strong> — hold your card against the screen.</p>
+
+      <div class="calibration-wrapper">
+        <div id="calibrationBox"></div>
+      </div>
+
+      <div class="slider-row">
+        <label>Adjust width</label>
+        <input type="range" id="calSlider" min="100" max="600" value="250" oninput="updateCalibration()">
+        <span class="slider-val" id="calWidthLabel">250 px</span>
+      </div>
+
+      <div id="calStatus" style="margin-top:20px; font-size:13px; color:var(--muted);">
+        Adjust slider until the rectangle matches your card width.
+      </div>
+
+      <div id="ppmDisplay" style="margin-top:12px; font-family:var(--font-mono); font-size:13px; color:var(--muted);"></div>
+    </div>
+
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn btn-secondary" onclick="goTo('welcomeScreen')">← Back</button>
+      <button class="btn btn-primary" id="calNextBtn" onclick="saveCalibrationAndNext()">Confirm Calibration →</button>
+    </div>
+  </div>
+
+  <!-- ═══ DISTANCE SCREEN ═══ -->
+  <div id="distanceScreen" class="screen">
+    <div class="logo">Step 2 of 3</div>
+    <h1 class="headline">Viewing Distance</h1>
+    <p class="subtitle">Select how far you are sitting from your screen. The letter sizes will be calculated accordingly.</p>
+
+    <div class="card">
+      <div class="card-title">Select Distance</div>
+      <div class="distance-options">
+        <div class="dist-card selected" data-cm="50" onclick="selectDist(this)">
+          <div class="dist-val">50 cm</div>
+          <div class="dist-label">~20 inches</div>
+        </div>
+        <div class="dist-card" data-cm="60" onclick="selectDist(this)">
+          <div class="dist-val">60 cm</div>
+          <div class="dist-label">~24 inches (recommended)</div>
+        </div>
+        <div class="dist-card" data-cm="80" onclick="selectDist(this)">
+          <div class="dist-val">80 cm</div>
+          <div class="dist-label">~31 inches</div>
+        </div>
+        <div class="dist-card" data-cm="100" onclick="selectDist(this)">
+          <div class="dist-val">100 cm</div>
+          <div class="dist-label">~39 inches</div>
+        </div>
+      </div>
+      <div class="custom-dist">
+        <label>Custom:</label>
+        <input type="number" id="customDist" placeholder="e.g. 70" min="30" max="200" oninput="setCustomDist()">
+        <label>cm</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Posture Instructions</div>
+      <ul class="instr-list">
+        <li><span class="instr-num">→</span><span>Sit upright with your back straight</span></li>
+        <li><span class="instr-num">→</span><span>Screen at eye level — tilt if needed</span></li>
+        <li><span class="instr-num">→</span><span>Cover one eye with your palm (don't press the eye)</span></li>
+        <li><span class="instr-num">→</span><span>Keep the uncovered eye open naturally</span></li>
+        <li><span class="instr-num">→</span><span>Read each line aloud or type the letters you see</span></li>
+      </ul>
+    </div>
+
+    <div class="card" style="margin-top:0;">
+      <div class="card-title">Which Eye First?</div>
+      <div class="eye-btns">
+        <div class="eye-btn selected" data-eye="right" onclick="selectEye(this)">
+          <div class="eye-icon">👁</div>
+          <div class="eye-label">Right Eye</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">Cover left</div>
+        </div>
+        <div class="eye-btn" data-eye="left" onclick="selectEye(this)">
+          <div class="eye-icon">👁</div>
+          <div class="eye-label">Left Eye</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">Cover right</div>
+        </div>
+        <div class="eye-btn" data-eye="both" onclick="selectEye(this)">
+          <div class="eye-icon">👀</div>
+          <div class="eye-label">Both Eyes</div>
+          <div style="font-size:11px; color:var(--muted); margin-top:4px;">No cover</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row" style="justify-content:center;">
+      <button class="btn btn-secondary" onclick="goTo('calibrationScreen')">← Back</button>
+      <button class="btn btn-primary" onclick="startTest()">Start Eye Test →</button>
+    </div>
+  </div>
+
+  <!-- ═══ TEST SCREEN ═══ -->
+  <div id="testScreen" class="screen">
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+
+    <div class="test-meta">
+      <span>Snellen Eye Test</span>
+      <span class="row-indicator" id="rowIndicator">Row 1 of 11</span>
+      <span id="eyeIndicator">Right Eye</span>
+      <button class="btn btn-secondary btn-sm" onclick="exitTest()">Exit</button>
+    </div>
+
+    <div id="letterDisplay">E</div>
+
+    <div class="feedback-flash" id="feedbackFlash">✓</div>
+
+    <div class="test-input-area">
+      <div class="typed-answer" id="typedAnswer">_</div>
+      <div class="input-hint">Type the letters you see, then press Enter — or use the buttons below</div>
+      <div class="letter-buttons" id="letterButtons"></div>
+      <div class="submit-row">
+        <button class="btn btn-secondary btn-sm" onclick="clearTyped()">Clear</button>
+        <button class="btn btn-primary" onclick="submitAnswer()">Submit Row ↵</button>
+        <button class="btn btn-secondary btn-sm" onclick="skipRow()">Can't See →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTS SCREEN ═══ -->
+  <div id="resultsScreen" class="screen">
+    <div class="logo">Test Complete</div>
+
+    <div id="acuityResult" class="acuity-display">20/20</div>
+    <div class="acuity-label" id="acuityEye">Right Eye</div>
+    <div id="resultGrade"></div>
+
+    <div class="card">
+      <div class="card-title">Row by Row Results</div>
+      <table class="result-table" id="resultTable">
+        <thead>
+          <tr>
+            <th>Acuity</th>
+            <th>Letters</th>
+            <th>Your Answer</th>
+            <th>Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What Does This Mean?</div>
+      <div id="interpretationText" style="font-size:14px; line-height:1.7; color:var(--fg);"></div>
+    </div>
+
+    <div class="history-section card" id="historyCard">
+      <div class="card-title">Test History</div>
+      <div id="historyList"></div>
+    </div>
+
+    <div class="disclaimer">
+      <strong>⚠ Reminder:</strong> This is a screening tool only. These results are an estimate and can be affected by screen calibration accuracy and ambient lighting. Always consult an optometrist for a definitive diagnosis.
+    </div>
+
+    <div class="btn-row" style="justify-content:center; flex-wrap:wrap;">
+      <button class="btn btn-secondary" onclick="testOtherEye()">Test Other Eye</button>
+      <button class="btn btn-secondary" onclick="restartFromDistance()">Retest</button>
+      <button class="btn btn-primary" onclick="goTo('welcomeScreen')">New Session</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+const OPTOTYPES = ['C','D','E','F','L','O','P','T','Z'];
+const CARD_WIDTH_MM = 85.6;
+
+// Snellen rows: [acuityNum, acuityDen, letters per row, label]
+const SNELLEN_ROWS = [
+  { num: 20, den: 200, count: 1, label: '20/200' },
+  { num: 20, den: 160, count: 1, label: '20/160' },
+  { num: 20, den: 100, count: 2, label: '20/100' },
+  { num: 20, den: 80,  count: 3, label: '20/80'  },
+  { num: 20, den: 63,  count: 3, label: '20/63'  },
+  { num: 20, den: 50,  count: 4, label: '20/50'  },
+  { num: 20, den: 40,  count: 5, label: '20/40'  },
+  { num: 20, den: 32,  count: 5, label: '20/32'  },
+  { num: 20, den: 25,  count: 6, label: '20/25'  },
+  { num: 20, den: 20,  count: 7, label: '20/20'  },
+  { num: 20, den: 15,  count: 8, label: '20/15'  },
+];
+
+let state = {
+  ppm: null,            // pixels per mm
+  distanceCm: 60,
+  selectedEye: 'right',
+  currentRow: 0,
+  currentLetters: [],
+  typedAnswer: '',
+  results: [],
+  rowResults: [],
+  started: false,
+};
+
+// ══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'calibrationScreen') loadCalibration();
+  if (id === 'resultsScreen') renderHistory();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CALIBRATION
+// ══════════════════════════════════════════════════════════════
+function loadCalibration() {
+  const saved = localStorage.getItem('snellen_ppm');
+  if (saved) {
+    state.ppm = parseFloat(saved);
+    // Compute box width from saved ppm
+    const w = Math.round(state.ppm * CARD_WIDTH_MM);
+    document.getElementById('calSlider').value = w;
+    updateCalibration();
+    document.getElementById('calStatus').innerHTML =
+      `<span style="color:var(--success)">✓ Previous calibration loaded. Adjust if needed.</span>`;
+  } else {
+    updateCalibration();
+  }
+}
+
+function updateCalibration() {
+  const w = parseInt(document.getElementById('calSlider').value);
+  document.getElementById('calibrationBox').style.width = w + 'px';
+  document.getElementById('calWidthLabel').textContent = w + ' px';
+  const ppm = w / CARD_WIDTH_MM;
+  document.getElementById('ppmDisplay').textContent =
+    `Pixels per mm: ${ppm.toFixed(2)} — Screen density estimate: ${Math.round(ppm * 25.4)} PPI`;
+  state.ppm = ppm;
+}
+
+function saveCalibrationAndNext() {
+  if (!state.ppm) { alert('Please adjust the calibration slider first.'); return; }
+  localStorage.setItem('snellen_ppm', state.ppm);
+  document.getElementById('calStatus').innerHTML =
+    `<span style="color:var(--success)">✓ Calibration saved!</span>`;
+  goTo('distanceScreen');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DISTANCE & EYE
+// ══════════════════════════════════════════════════════════════
+function selectDist(el) {
+  document.querySelectorAll('.dist-card').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  state.distanceCm = parseInt(el.dataset.cm);
+  document.getElementById('customDist').value = '';
+}
+
+function setCustomDist() {
+  const v = parseInt(document.getElementById('customDist').value);
+  if (v >= 30 && v <= 200) {
+    state.distanceCm = v;
+    document.querySelectorAll('.dist-card').forEach(d => d.classList.remove('selected'));
+  }
+}
+
+function selectEye(el) {
+  document.querySelectorAll('.eye-btn').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedEye = el.dataset.eye;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  LETTER SIZE CALCULATION
+// ══════════════════════════════════════════════════════════════
+function calcLetterHeightPx(acuityDen, distanceCm) {
+  // Snellen letter height = 5 arcminutes at the reference distance (20ft = 609.6cm)
+  // At actual distance: arcmin = 5 * (acuityDen / 20) * (distanceCm / 609.6) ... no.
+  // 
+  // Correct formula:
+  // At 20ft (609.6cm), 20/acuityDen means the letter subtends 5 arcmin visually.
+  // The physical height of the letter h = 2 * d * tan(arcmin/2 * pi/180/60)
+  // where d = 609.6 cm, arcmin = 5 * (acuityDen/20)
+  //
+  // We scale to user distance:
+  // h_px = 2 * distanceCm * tan(5*(acuityDen/20)/2 * pi/10800) * ppm * 10
+
+  const arcMinutes = 5 * (acuityDen / 20);
+  const arcRad = arcMinutes * Math.PI / 10800; // arcmin -> radians
+  const heightCm = 2 * distanceCm * Math.tan(arcRad / 2);
+  const heightMm = heightCm * 10;
+  return heightMm * state.ppm;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TEST
+// ══════════════════════════════════════════════════════════════
+function buildLetterButtons() {
+  const wrap = document.getElementById('letterButtons');
+  wrap.innerHTML = '';
+  OPTOTYPES.forEach(l => {
+    const b = document.createElement('button');
+    b.className = 'letter-btn';
+    b.textContent = l;
+    b.onclick = () => appendLetter(l);
+    wrap.appendChild(b);
+  });
+  const bk = document.createElement('button');
+  bk.className = 'letter-btn backspace';
+  bk.textContent = '⌫';
+  bk.onclick = () => {
+    state.typedAnswer = state.typedAnswer.slice(0, -1);
+    updateTypedDisplay();
+  };
+  wrap.appendChild(bk);
+}
+
+function appendLetter(l) {
+  if (state.typedAnswer.length < state.currentLetters.length) {
+    state.typedAnswer += l;
+    updateTypedDisplay();
+  }
+}
+
+function updateTypedDisplay() {
+  const el = document.getElementById('typedAnswer');
+  el.textContent = state.typedAnswer || '_';
+}
+
+function generateRow(rowIdx) {
+  const row = SNELLEN_ROWS[rowIdx];
+  const letters = [];
+  const pool = [...OPTOTYPES];
+  for (let i = 0; i < row.count; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    letters.push(pool.splice(idx, 1)[0]);
+  }
+  return letters;
+}
+
+function renderRow(rowIdx) {
+  const row = SNELLEN_ROWS[rowIdx];
+  state.currentLetters = generateRow(rowIdx);
+  state.typedAnswer = '';
+  updateTypedDisplay();
+
+  const px = calcLetterHeightPx(row.den, state.distanceCm);
+  const display = document.getElementById('letterDisplay');
+  display.style.fontSize = px + 'px';
+  display.textContent = state.currentLetters.join(' ');
+
+  document.getElementById('rowIndicator').textContent =
+    `Row ${rowIdx + 1} of ${SNELLEN_ROWS.length} — ${row.label}`;
+  document.getElementById('progressBar').style.width =
+    ((rowIdx / SNELLEN_ROWS.length) * 100) + '%';
+}
+
+function startTest() {
+  if (!state.ppm) { alert('Please complete calibration first.'); goTo('calibrationScreen'); return; }
+  state.currentRow = 0;
+  state.rowResults = [];
+  state.started = true;
+
+  const eyeLabel = {right:'Right Eye', left:'Left Eye', both:'Both Eyes'}[state.selectedEye];
+  document.getElementById('eyeIndicator').textContent = eyeLabel;
+
+  buildLetterButtons();
+  goTo('testScreen');
+  renderRow(0);
+  document.addEventListener('keydown', handleKeydown);
+}
+
+function handleKeydown(e) {
+  const screen = document.getElementById('testScreen');
+  if (!screen.classList.contains('active')) return;
+  if (e.key === 'Enter') { submitAnswer(); return; }
+  if (e.key === 'Backspace') {
+    state.typedAnswer = state.typedAnswer.slice(0, -1);
+    updateTypedDisplay();
+    return;
+  }
+  const ch = e.key.toUpperCase();
+  if (OPTOTYPES.includes(ch)) appendLetter(ch);
+}
+
+function clearTyped() {
+  state.typedAnswer = '';
+  updateTypedDisplay();
+}
+
+function submitAnswer() {
+  const answer = state.typedAnswer.toUpperCase();
+  if (!answer) return;
+
+  const correct = state.currentLetters;
+  let matches = 0;
+  const ansArr = answer.split('');
+  correct.forEach((ch, i) => {
+    if (ansArr[i] === ch) matches++;
+  });
+
+  const pct = matches / correct.length;
+  const passed = pct >= 0.6;
+
+  state.rowResults.push({
+    row: state.currentRow,
+    label: SNELLEN_ROWS[state.currentRow].label,
+    letters: correct.join(''),
+    answer: answer,
+    pct: Math.round(pct * 100),
+    passed,
+    den: SNELLEN_ROWS[state.currentRow].den,
+  });
+
+  // flash
+  const flash = document.getElementById('feedbackFlash');
+  flash.textContent = passed ? '✓' : '✗';
+  flash.className = 'feedback-flash ' + (passed ? 'correct' : 'wrong') + ' show';
+  setTimeout(() => flash.classList.remove('show'), 500);
+
+  if (!passed || state.currentRow >= SNELLEN_ROWS.length - 1) {
+    endTest();
+  } else {
+    state.currentRow++;
+    setTimeout(() => renderRow(state.currentRow), 300);
+  }
+}
+
+function skipRow() {
+  state.rowResults.push({
+    row: state.currentRow,
+    label: SNELLEN_ROWS[state.currentRow].label,
+    letters: state.currentLetters.join(''),
+    answer: '—',
+    pct: 0,
+    passed: false,
+    den: SNELLEN_ROWS[state.currentRow].den,
+    skipped: true,
+  });
+  endTest();
+}
+
+function exitTest() {
+  document.removeEventListener('keydown', handleKeydown);
+  goTo('welcomeScreen');
+}
+
+function endTest() {
+  document.removeEventListener('keydown', handleKeydown);
+  document.getElementById('progressBar').style.width = '100%';
+
+  // Find best passed row
+  const passed = state.rowResults.filter(r => r.passed);
+  const bestRow = passed.length ? passed[passed.length - 1] : null;
+  const acuity = bestRow ? `20/${bestRow.den}` : 'Unable to read chart';
+
+  // Save history
+  const history = JSON.parse(localStorage.getItem('snellen_history') || '[]');
+  history.unshift({
+    date: new Date().toLocaleString(),
+    acuity,
+    eye: state.selectedEye,
+    distance: state.distanceCm,
+  });
+  localStorage.setItem('snellen_history', JSON.stringify(history.slice(0, 20)));
+
+  // Render results
+  document.getElementById('acuityResult').textContent = acuity;
+  const eyeLabel = {right:'Right Eye', left:'Left Eye', both:'Both Eyes'}[state.selectedEye];
+  document.getElementById('acuityEye').textContent = eyeLabel;
+
+  // Grade
+  const den = bestRow ? bestRow.den : 999;
+  let gradeClass, gradeText;
+  if (den <= 20)      { gradeClass = 'grade-excellent'; gradeText = '✦ Excellent Vision'; }
+  else if (den <= 40) { gradeClass = 'grade-good';      gradeText = '✓ Good Vision'; }
+  else if (den <= 80) { gradeClass = 'grade-fair';      gradeText = '○ Fair Vision'; }
+  else                { gradeClass = 'grade-poor';      gradeText = '△ Impaired — Consult an Optometrist'; }
+  document.getElementById('resultGrade').innerHTML =
+    `<span class="result-grade ${gradeClass}">${gradeText}</span>`;
+
+  // Table
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = '';
+  state.rowResults.forEach(r => {
+    const isBest = bestRow && r.label === bestRow.label && r.passed;
+    const pillClass = r.passed ? 'pill-success' : 'pill-danger';
+    const dotClass  = r.passed ? 'dot-success'  : 'dot-danger';
+    const status = r.skipped ? 'Skipped' : (r.passed ? 'Pass' : 'Fail');
+    tbody.innerHTML += `
+      <tr class="${isBest ? 'best-row' : ''}">
+        <td>${r.label}${isBest ? ' ★' : ''}</td>
+        <td style="font-family:var(--font-mono)">${r.letters}</td>
+        <td style="font-family:var(--font-mono)">${r.answer}</td>
+        <td>${r.pct}%</td>
+        <td><span class="pill ${pillClass}"><span class="dot ${dotClass}"></span>${status}</span></td>
+      </tr>`;
+  });
+
+  // Interpretation
+  let interp = '';
+  if (den <= 20) interp = 'Your vision meets or exceeds the standard 20/20 benchmark. This suggests normal or above-normal visual acuity for distance.';
+  else if (den <= 40) interp = 'Your vision is slightly below the 20/20 benchmark but still within functional range. Many people with 20/40 vision drive without glasses. An optometrist visit is still recommended.';
+  else if (den <= 80) interp = 'Your vision suggests moderate difficulty reading at distance. Corrective lenses may significantly improve your quality of life. Please schedule an eye exam.';
+  else interp = 'The test suggests significant difficulty with distance vision. Please consult an optometrist or ophthalmologist promptly. Do not use this result to make medical decisions.';
+  document.getElementById('interpretationText').textContent = interp;
+
+  goTo('resultsScreen');
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('snellen_history') || '[]');
+  const list = document.getElementById('historyList');
+  if (!history.length) { list.innerHTML = '<p style="font-size:13px;color:var(--muted)">No previous tests recorded.</p>'; return; }
+  list.innerHTML = history.map(h => `
+    <div class="history-item">
+      <div>
+        <div class="h-acuity">${h.acuity}</div>
+        <div class="h-meta">${h.eye} eye · ${h.distance}cm · ${h.date}</div>
+      </div>
+    </div>`).join('');
+}
+
+function testOtherEye() {
+  // Switch eye
+  state.selectedEye = state.selectedEye === 'right' ? 'left' : 'right';
+  restartFromDistance();
+}
+
+function restartFromDistance() {
+  state.currentRow = 0;
+  state.rowResults = [];
+  goTo('distanceScreen');
+}
+</script>
+</body>
+</html>
